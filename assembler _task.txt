@@ -1,0 +1,124 @@
+%macro pushd 0
+    push eax
+    push ebx
+    push ecx
+    push edx
+%endmacro
+
+%macro popd 0
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+%endmacro
+
+%macro print 2
+    pushd
+    mov edx, %1
+    mov ecx, %2
+    mov ebx, 1
+    mov eax, 4
+    int 0x80
+    popd
+%endmacro
+
+
+%macro dprint 0
+    pushd
+    mov ecx, 10
+    mov bx, 0
+
+%%_divide:
+    xor edx, edx
+    div ecx
+    push dx
+    inc bx
+    test eax, eax
+    jnz %%_divide
+
+%%_digit:
+    pop ax
+    add ax, '0'
+    mov [reminder], ax
+    print 1, reminder
+    dec bx
+    cmp bx, 0
+    jg %%_digit
+    popd
+%endmacro
+
+
+section .text
+
+global _start
+
+_start:
+	mov eax, 0
+	mov ebx, 0
+	mov ecx, 0
+    
+
+_for:
+	mov ebx, ecx
+	add ecx, 4
+    
+_for2:
+	mov al, [x+ecx]
+	mov dl, [x+ebx]
+	sub al, dl
+	imul al
+	push eax
+	mov al, 0
+	mov dl, 0
+	mov al, [y+ecx]
+	mov dl, [y+ebx]
+	sub al, dl
+	imul al
+	mov dl, al
+	pop eax
+	add al, dl
+	mov [var], al
+	finit
+	fild dword [var]
+	fsqrt
+	fist dword [var]
+	mov al, [var]
+	cmp al, [max]
+	jg _act
+    
+_another:
+	jmp _exit
+
+_act:
+	mov [max], al
+   
+_exit:
+	add ecx, 4
+	mov eax, 0
+	mov edx, 0
+	cmp ecx, len
+	jl _for
+	add ebx, 4
+	cmp ebx, len
+	jl _for
+    
+    
+    
+
+	mov eax, [max]   
+	dprint
+    
+section .data
+	x dd 10, 1, 3, 4, 5, 5, 1
+	len equ $ - x
+	y dd 2, 3, 5, 7, 10, 3, 2
+	res db 0
+	max dd 0
+	var dd 0
+   
+
+
+segment .bss
+	reminder resb 1
+
+
